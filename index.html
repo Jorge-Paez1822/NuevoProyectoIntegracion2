@@ -1,11 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Monitor de Cultivo de Orquídeas - Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; }
+        header { background-color: #007bff; color: white; padding: 20px; text-align: center; }
+        nav { background-color: #343a40; padding: 10px 0; }
+        nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        nav a:hover { background-color: #0056b3; }
+        .container { padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .card { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .kpi { text-align: center; }
+        .kpi h3 { margin-top: 0; color: #6c757d; }
+        .kpi .value { font-size: 3em; font-weight: bold; margin: 10px 0; }
+        .status-optimal { background-color: #28a745; color: white; }
+        .status-alert { background-color: #dc3545; color: white; }
+    </style>
 </head>
 <body>
-    
+
+    <header>
+        <h1>Monitor de Cultivo de Orquídeas</h1>
+    </header>
+
+    <nav>
+        <a href="/index.html">Dashboard (Tiempo Real)</a>
+        <a href="/config_riego.html">Configuración de Riego</a>
+        <a href="#historico">Datos Históricos</a>
+    </nav>
+
+    <div class="container">
+        <div class="card kpi status-optimal" id="estado-card">
+            <h3>Estado del Cultivo</h3>
+            <p class="value" id="estado-cultivo">—</p>
+            <small id="status-detail">Esperando datos...</small>
+        </div>
+
+        <div class="grid">
+            <div class="card kpi">
+                <h3>Humedad Relativa Actual</h3>
+                <p class="value" id="humedad-actual">—</p>
+                <small id="ultima-actualizacion">Última actualización: —</small>
+            </div>
+
+            <div class="card kpi">
+                <h3>Temperatura Actual</h3>
+                <p class="value" id="temperatura-actual">—</p>
+                <small id="temp-ultimo">Última actualización: —</small>
+            </div>
+        </div>
+
+        <div class="card" id="historico">
+            <h2>Registro Histórico de Condiciones Ambientales</h2>
+            <p>Aquí se cargará un gráfico (usando JavaScript) mostrando los datos históricos de la base de datos.</p>
+            <div id="chart-container" style="height: 300px; background-color: #eee;"></div>
+            <label for="frecuencia">Frecuencia de Registro:</label>
+            <select id="frecuencia">
+                <option value="1h">Cada 1 hora</option>
+                <option value="30m">Cada 30 minutos</option>
+                <option value="15m">Cada 15 minutos</option>
+            </select>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>Notificaciones y Alertas</h2>
+            <ul id="alertas-list">
+                <li id="alerta-1">Sin alertas.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="/js/app.js"></script>
 </body>
 </html>
