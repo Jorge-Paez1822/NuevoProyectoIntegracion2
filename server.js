@@ -28,6 +28,9 @@ let latest_data = {
   timestamp: new Date().toISOString()
 };
 let latest_config = { schedule: null, updatedAt: null };
+// Variables para modelos de persistencia (si no usas DB, quedan como null)
+let Reading = null;
+let RiegoConfig = null;
 
 mqttClient.on('connect', () => {
   console.log(`Conectado al broker MQTT: ${MQTT_BROKER}`);
