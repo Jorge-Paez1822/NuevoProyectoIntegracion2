@@ -1,0 +1,6 @@
+- hacer que el simulador tenga un botón que cambie la temperatura y la humedad y que estos se vayan guardando en la base de datos (ideal MYSQL) 
+  hacer la conectividad con la base de datos.
+
+- hacer una comparación con una tabla de datos y que según este nos muestre una alerta o un dato optimo.
+
+- hacer una ppt (4 o 5 laminas), mostrar el script, y la base de datos.
