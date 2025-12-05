@@ -18,6 +18,21 @@
         .kpi .value { font-size: 3em; font-weight: bold; margin: 10px 0; }
         .status-optimal { background-color: #28a745; color: white; }
         .status-alert { background-color: #dc3545; color: white; }
+        #simulator { background-color: #f0f8ff; padding: 20px; margin: 20px; border-radius: 8px; border-left: 4px solid #007bff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #simulator h2 { color: #007bff; margin-top: 0; }
+        #simulator div { margin: 10px 0; font-size: 1.1em; font-weight: bold; }
+        #simulator span { color: #dc3545; font-size: 1.2em; }
+        #simulator button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px 5px 5px 0; font-size: 1em; }
+        #simulator button:hover { background-color: #0056b3; }
+        #alert-area { margin-top: 15px; }
+        #readings-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        #readings-table thead { background-color: #007bff; color: white; }
+        #readings-table th { padding: 12px; text-align: left; font-weight: bold; }
+        #readings-table td { padding: 10px; border-bottom: 1px solid #ddd; }
+        #readings-table tbody tr:hover { background-color: #f5f5f5; }
+        #readings-table .status-ok { color: #28a745; font-weight: bold; }
+        #readings-table .status-alert { color: #dc3545; font-weight: bold; }
+        #btn-refresh-history:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
@@ -54,15 +69,27 @@
         </div>
 
         <div class="card" id="historico">
-            <h2>Registro Histórico de Condiciones Ambientales</h2>
-            <p>Aquí se cargará un gráfico (usando JavaScript) mostrando los datos históricos de la base de datos.</p>
-            <div id="chart-container" style="height: 300px; background-color: #eee;"></div>
-            <label for="frecuencia">Frecuencia de Registro:</label>
-            <select id="frecuencia">
-                <option value="1h">Cada 1 hora</option>
-                <option value="30m">Cada 30 minutos</option>
-                <option value="15m">Cada 15 minutos</option>
-            </select>
+            <h2>📊 Registro Histórico de Condiciones Ambientales</h2>
+            <p style="color:#666; font-size:0.9em;">Últimas 20 lecturas guardadas en la base de datos</p>
+            <div style="overflow-x:auto;">
+                <table id="readings-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>🌡️ Temperatura</th>
+                            <th>💧 Humedad</th>
+                            <th>📅 Fecha y Hora</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="readings-tbody">
+                        <tr>
+                            <td colspan="5" style="text-align:center; color:#999;">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="btn-refresh-history" style="margin-top:15px; padding:10px 20px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">🔄 Actualizar tabla</button>
         </div>
 
         <div class="card" style="margin-top: 20px;">
@@ -72,6 +99,16 @@
             </ul>
         </div>
 
+    </div>
+
+    <div id="simulator">
+      <h2>💾 Guardar Lecturas en Base de Datos</h2>
+      <p style="font-size:0.9em; color:#666; margin-top:-10px;">Los valores se actualizan automáticamente desde Wokwi cada 5 segundos</p>
+      <div>🌡️ Temperatura: <span id="temp">--</span> °C</div>
+      <div>💧 Humedad: <span id="hum">--</span> %</div>
+      <button id="btn-save">💾 Guardar lectura actual</button>
+      <button id="btn-rand" style="background-color:#6c757d;">🎲 Generar valores aleatorios</button>
+      <div id="alert-area"></div>
     </div>
 
     <script src="/js/app.js"></script>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Riego</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; }
+        header { background-color: #007bff; color: white; padding: 20px; text-align: center; }
+        nav { background-color: #343a40; padding: 10px 0; }
+        nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        nav a:hover { background-color: #0056b3; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .btn-guardar { background-color: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; }
+        .btn-guardar:hover { background-color: #1e7e34; }
+        .btn-eliminar { background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        .btn-eliminar:hover { background-color: #bd2130; }
+        .dia-row { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; align-items: center; gap: 15px; }
+        .dia-row input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .dia-row label { min-width: 100px; font-weight: bold; }
+        .dia-row input[type="time"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .notification-badge { background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; margin-left: 10px; }
+        .schedule-list { list-style: none; padding: 0; }
+        .schedule-item { background: #f8f9fa; padding: 12px; margin: 8px 0; border-radius: 5px; border-left: 4px solid #007bff; display: flex; justify-content: space-between; align-items: center; }
+        .alert-success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 5px; margin-bottom: 15px; }
+        .alert-info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 12px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Monitor de Cultivo de Orquídeas</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard (Tiempo Real)</a>
+        <a href="config_riego.html">Configuración de Riego</a>
+        <a href="#historico">Datos Históricos</a>
+    </nav>
+
+    <div class="container">
+        
+        <div id="notification-status" class="alert-info">
+            <strong>🔔 Estado de Notificaciones:</strong> <span id="notif-status">Verificando...</span>
+            <button id="btn-enable-notifications" style="margin-left:15px; padding:8px 16px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">Activar Notificaciones</button>
+        </div>
+
+        <div class="card">
+            <h2>📅 Calendario de Riego (RF1)</h2>
+            <p style="color:#666; margin-bottom:20px;">Configura los días y horarios en que deseas regar tus orquídeas. El sistema te enviará notificaciones automáticas.</p>
+            
+            <form id="form-calendario">
+                <div class="form-group">
+                    <label>Selecciona los Días y Horas de Riego:</label>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-lunes" name="dia-lunes">
+                        <label for="dia-lunes">🗓️ Lunes</label>
+                        <input type="time" id="hora-lunes" name="hora-lunes" value="09:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-martes" name="dia-martes">
+                        <label for="dia-martes">🗓️ Martes</label>
+                        <input type="time" id="hora-martes" name="hora-martes" value="09:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-miercoles" name="dia-miercoles">
+                        <label for="dia-miercoles">🗓️ Miércoles</label>
+                        <input type="time" id="hora-miercoles" name="hora-miercoles" value="09:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-jueves" name="dia-jueves">
+                        <label for="dia-jueves">🗓️ Jueves</label>
+                        <input type="time" id="hora-jueves" name="hora-jueves" value="09:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-viernes" name="dia-viernes">
+                        <label for="dia-viernes">🗓️ Viernes</label>
+                        <input type="time" id="hora-viernes" name="hora-viernes" value="09:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-sabado" name="dia-sabado">
+                        <label for="dia-sabado">🗓️ Sábado</label>
+                        <input type="time" id="hora-sabado" name="hora-sabado" value="10:00">
+                    </div>
+                    
+                    <div class="dia-row">
+                        <input type="checkbox" id="dia-domingo" name="dia-domingo">
+                        <label for="dia-domingo">🗓️ Domingo</label>
+                        <input type="time" id="hora-domingo" name="hora-domingo" value="10:00">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-guardar">💾 Guardar Calendario de Riego</button>
+            </form>
+            
+            <div id="mensaje-guardado" style="display:none; margin-top:15px;"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🔔 Horarios Programados (RF2)</h2>
+            <p style="color:#666;">Próximos recordatorios de riego configurados:</p>
+            <ul id="schedule-list" class="schedule-list">
+                <li style="text-align:center; color:#999;">No hay horarios configurados</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h2>⏰ Próximo Riego</h2>
+            <div style="font-size:1.2em; padding:15px; background:#f8f9fa; border-radius:5px; text-align:center;">
+                <strong id="next-watering">Calculando...</strong>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="/js/config_riego.js"></script>
+</body>
+</html>

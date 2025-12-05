@@ -1,9 +1,11 @@
 // server.js
 // Servidor Express + cliente MQTT para recibir datos desde Wokwi (broker.hivemq.com)
 
+require('dotenv').config();
 const express = require('express');
 const mqtt = require('mqtt');
 const path = require('path');
+const mysql = require('mysql2/promise');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -19,8 +21,6 @@ const MQTT_TOPIC = process.env.MQTT_TOPIC || 'orquideas/datos/ambiental';
 
 const mqttClient = mqtt.connect(MQTT_BROKER);
 
-
-
 // Inicializar con datos simulados mientras el ESP32/Wokwi no publique (evita UI vacía)
 let latest_data = {
   humedad: 81.5,
@@ -31,6 +31,26 @@ let latest_config = { schedule: null, updatedAt: null };
 // Variables para modelos de persistencia (si no usas DB, quedan como null)
 let Reading = null;
 let RiegoConfig = null;
+
+// Fallback en memoria cuando la BD no está disponible
+const inMemoryReadings = [];
+const OPTIMAL = {
+  TEMP_MIN: 15,
+  TEMP_MAX: 30,
+  HUM_MIN: 50,
+  HUM_MAX: 90,
+};
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'simulator_db',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
 mqttClient.on('connect', () => {
   console.log(`Conectado al broker MQTT: ${MQTT_BROKER}`);
@@ -196,6 +216,102 @@ app.post('/api/simulate', (req, res) => {
 
 app.get('/api/simulate/status', (req, res) => {
   res.json({ enabled: simulationConfig.enabled, config: simulationConfig, latest_data });
+});
+
+// Endpoint para insertar lectura (con fallback en memoria si falla la BD)
+app.post('/api/readings', async (req, res) => {
+  const { temperature, humidity } = req.body || {};
+  if (temperature == null || humidity == null) {
+    return res.status(400).json({ error: 'temperature and humidity required' });
+  }
+
+  const readingObj = {
+    temperature: Number(temperature),
+    humidity: Number(humidity),
+    created_at: new Date(),
+    source: 'api'
+  };
+
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO readings (temperature, humidity) VALUES (?, ?)',
+      [readingObj.temperature, readingObj.humidity]
+    );
+    const insertedId = result.insertId;
+    const [rows] = await pool.execute('SELECT * FROM readings WHERE id = ?', [insertedId]);
+    return res.status(201).json({ reading: rows[0] });
+  } catch (err) {
+    console.error('DB error on /api/readings, usando memoria:', err.message);
+    inMemoryReadings.unshift(readingObj);
+    if (inMemoryReadings.length > 200) inMemoryReadings.pop();
+    return res.status(201).json({ reading: readingObj, storage: 'memory' });
+  }
+});
+
+// Endpoint para comparar último dato con optimal_values (o valores por defecto si no hay BD)
+app.get('/api/check', async (req, res) => {
+  // Helper para evaluar rangos
+  function evalStatus(temp, hum, optimal) {
+    const issues = [];
+    if (optimal.min_temp != null && temp < optimal.min_temp) issues.push('temperature below min');
+    if (optimal.max_temp != null && temp > optimal.max_temp) issues.push('temperature above max');
+    if (optimal.min_humidity != null && hum < optimal.min_humidity) issues.push('humidity below min');
+    if (optimal.max_humidity != null && hum > optimal.max_humidity) issues.push('humidity above max');
+    const status = issues.length ? 'alert' : 'ok';
+    return { status, issues };
+  }
+
+  try {
+    const [[last]] = await pool.query('SELECT * FROM readings ORDER BY created_at DESC LIMIT 1');
+    if (!last) return res.json({ status: 'no-data', message: 'No readings available' });
+
+    const [opts] = await pool.query('SELECT * FROM optimal_values ORDER BY id LIMIT 1');
+    const optimal = opts[0] || {
+      min_temp: OPTIMAL.TEMP_MIN,
+      max_temp: OPTIMAL.TEMP_MAX,
+      min_humidity: OPTIMAL.HUM_MIN,
+      max_humidity: OPTIMAL.HUM_MAX,
+    };
+
+    const temp = parseFloat(last.temperature);
+    const hum = parseFloat(last.humidity);
+    const { status, issues } = evalStatus(temp, hum, optimal);
+    return res.json({ status, issues, reading: last, optimal });
+  } catch (err) {
+    console.error('DB error on /api/check, usando memoria:', err.message);
+    const last = inMemoryReadings[0];
+    if (!last) return res.json({ status: 'no-data', message: 'No readings available (memory)' });
+    const optimal = {
+      min_temp: OPTIMAL.TEMP_MIN,
+      max_temp: OPTIMAL.TEMP_MAX,
+      min_humidity: OPTIMAL.HUM_MIN,
+      max_humidity: OPTIMAL.HUM_MAX,
+    };
+    const { status, issues } = evalStatus(last.temperature, last.humidity, optimal);
+    return res.json({ status, issues, reading: last, optimal, storage: 'memory' });
+  }
+});
+
+// Endpoint para obtener últimas lecturas guardadas (histórico) con fallback en memoria
+app.get('/api/readings/recent', async (req, res) => {
+  const limit = parseInt(req.query.limit) || 20;
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, temperature, humidity, created_at FROM readings ORDER BY created_at DESC LIMIT ?',
+      [limit]
+    );
+    return res.json({ readings: rows });
+  } catch (err) {
+    console.error('DB error on /api/readings/recent, usando memoria:', err.message);
+    const subset = inMemoryReadings.slice(0, limit).map((r, idx) => ({
+      id: idx + 1,
+      temperature: r.temperature,
+      humidity: r.humidity,
+      created_at: r.created_at,
+      storage: 'memory'
+    }));
+    return res.json({ readings: subset, storage: 'memory' });
+  }
 });
 
 app.listen(port, () => {
